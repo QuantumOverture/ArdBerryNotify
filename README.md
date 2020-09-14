@@ -1,6 +1,6 @@
-<div style="display:block;text-align:center">
-<img src="./ArdRasp logo.png">
-</div>
+<p align="center">
+  <img src="https://github.com/ismaildude/ArdBerryNotify/raw/master/ArdRasp%20logo.png" />
+</p>
 
 Raspberry PI:
 
