@@ -11,7 +11,7 @@ import serial
 import re
 import time
 from textblob import TextBlob
-# If modifying these scopes, delete the file token.pickle.
+
 
 
 def GoogleAuth(type,version,SCOPES):
@@ -25,11 +25,16 @@ def GoogleAuth(type,version,SCOPES):
             creds = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
-        input("Press any key to continue logging in to the Gmail/Google Calender")
         # Write to serial output that an error has occured
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+            try:
+                creds.refresh(Request())
+            except:
+                UnexpectedFailure("Error in GoogleAuth")
+                exit(1)
         else:
+            PleaseLogIn()
+            input("Press any key to continue logging in to the Gmail/Google Calender!")
             flow = InstalledAppFlow.from_client_secrets_file(
                 'GoogleAuth.json', SCOPES)
             creds = flow.run_local_server(port=0)
@@ -70,14 +75,15 @@ def Gmail():
                 Sender = i["value"][i["value"].index("<")+1:-1].lower()
             if i["name"] == "Subject":
                 Subject = i["value"]
-
         # Analysis portion, only try if a hit hasn't been found
         if not NLPHit:
-            EmailTextAnalysis = TextBlob((Subject+EmailSnippet).lower())
+            EmailTextAnalysis = TextBlob((Subject + EmailSnippet).lower())
             EmailTextPol = EmailTextAnalysis.sentiment.polarity
             EmailTextOpi = EmailTextAnalysis.sentiment.subjectivity
-
-            if EmailTextOpi < 0.25 and (EmailTextPol > 0.8 or EmailTextPol < -0.5):
+            print(EmailTextOpi)
+            print(EmailTextPol)
+            if (EmailTextOpi < 0.25 or EmailTextOpi == 1) and (
+                    EmailTextPol > 0.8 or EmailTextPol < -0.5 or EmailTextPol == 0):
                 NLPHit = True
 
         # Sender and Keyword  check, only try if a hit hasn't been found
@@ -86,13 +92,17 @@ def Gmail():
             for Word in KeyWords:
                 if Word in EmailTextAnalysis:
                     ImportantKeywordOrSender = True
-            for Person in ImportantKeywordOrSender:
-                if re.search(Person,Sender):
+            for Person in VIPS:
+                if re.search(Person, Sender):
                     ImportantKeywordOrSender = True
-                    
 
-        print(Subject+"|"+EmailSnippet+"|"+Sender)
-        # Test
+
+    if ImportantKeywordOrSender and NLPHit:
+        return 3
+    elif ImportantKeywordOrSender:
+        return 1
+    else:
+        return 2
 
 
 
@@ -117,13 +127,21 @@ def IsTheWeatherBad():
     # +33 for single char conversion
     with open('AQI.json', 'r') as RawJson:
         KeyData = json.load(RawJson)["key"]
-    req = requests.get('http://api.airvisual.com/v2/city?city=None&state=OfYo&country=Business&key='+KeyData)
+    try:
+        req = requests.get('http://api.airvisual.com/v2/city?city=Woodland&state=California&country=USA&key='+KeyData)
+    except:
+        UnexpectedFailure("Error in Swiss AQI API")
+        exit(1)
     ResponseData  = json.loads(req.text)
     AQIData = int(ResponseData["data"]["current"]["pollution"]["aqius"] > 100)
-    TempData = (((ResponseData["data"]["current"]["weather"]["tp"] * (9/5)) + 32) > 90)
+    TempData = int(((ResponseData["data"]["current"]["weather"]["tp"] * (9/5)) + 32) > 90)
     HumdData = int(ResponseData["data"]["current"]["weather"]["hu"] > 60)
-
-    req = requests.get("https://enviro.epa.gov/enviro/efservice/getEnvirofactsUVHOURLY/ZIP/???/json")
+    WindData = int(round(ResponseData["data"]["current"]["weather"]["ws"]) > 17)
+    try:
+        req = requests.get("https://enviro.epa.gov/enviro/efservice/getEnvirofactsUVHOURLY/ZIP/95776/json")
+    except:
+        UnexpectedFailure("Error in UV API")
+        exit(1)
     ResponseData = json.loads(req.text)
 
     Hour24 = re.search("[0-9]{2}:",str(datetime.datetime.now())).group()[:-1]
@@ -140,12 +158,16 @@ def IsTheWeatherBad():
     # print(str(ord(AQIData)-33) + " | " + str(ord(TempData)-33) + " | " + str(ord(HumdData)-33) + " | " + str(ord(UVData)-33))
 
     # Convert into weighted int
-    return int(((AQIData*60) + (TempData*20) + (HumdData*10) + (UVData*10)) > 50)
+    return int(((AQIData*50) + (TempData*30) + (HumdData*5) + (UVData*30) + (WindData*20)) > 50)
 
 def Forcast():
     # https://www.weather.gov/documentation/services-web-api
-    header = {"User-Agent": "(, )"}
-    req = requests.get('https://api.weather.gov/gridpoints/??/??,??/forecast',headers=header)
+    header = {"User-Agent": "(ArdBerryNotify, ismaildee@gmail.com)"}
+    try:
+        req = requests.get('https://api.weather.gov/gridpoints/STO/31,73/forecast',headers=header)
+    except:
+        UnexpectedFailure("Error in Forecast API")
+        exit(1)
     Result = json.loads(req.text)
     Forecast = Result["properties"]["periods"][0]["detailedForecast"][0:93]
     return [chr(len(Forecast) + 33), Forecast]
@@ -155,11 +177,28 @@ def LCDUpdate():
     # Fix when on Raspberry PI 4
     # LCDUpdate waits for 5 minutes afterwards tell people an update  is happening(set some counter) -> while doing
     # that scroll output text at a good enough pace that it repeats a couple of times
-if __name__ == "__main__":
 
-    # Make sure serial output for error function is working
+def UnexpectedFailure(ErrorDescription):
+    pass
+    # Pass serial output to arduino also pass in Error description in place of forcast data
+    # Will force arduino to shutdown all current processes(turn all lights red) -> follow same format as data format
+
+    # Will turn Raspberry PI's LCD to error state prompt
+    exit(1)
+
+def PleaseLogIn():
+    pass
+    # Pass serial output to arduino
+    # Will force arduino to shutdown all current processes(turn all lights red) -> follow same format as data format
+    # Will turn Raspberry PI's LCD to error state prompt
+
+
+if __name__ == "__main__":
+    pass
+
     # Run Api calls every 5 minutes
-    # Gmail()
-    # Real length converted
-    # print(ord(Forcast()[1])-33)
-    #use formula for color calc for weather data
+    # Data will be sent to the arduino and LCD in a standardized format -> for error and data purposes
+    # Error "lights" is taken care by the arduino code -> still be able to accept data in case of gmail/calendar auth
+
+    # Make sure all apis are working and LCDUpdate works
+    # Make sure serial output for error function is working
