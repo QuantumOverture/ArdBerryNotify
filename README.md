@@ -1,7 +1,9 @@
 <p align="center">
   <img src="https://github.com/ismaildude/ArdBerryNotify/raw/master/ArdRasp%20logo.png" />
 </p>
-
+<h1 align="center">
+  ArdBerryNotify
+</h1>
 Raspberry PI:
 
 * TextBlob + Important messagers list => Classify emails
