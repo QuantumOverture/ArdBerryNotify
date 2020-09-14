@@ -1,3 +1,7 @@
+<div style="display:block;text-align:center">
+<img src="./ArdRasp logo.png">
+</div>
+
 Raspberry PI:
 
 * TextBlob + Important messagers list => Classify emails
