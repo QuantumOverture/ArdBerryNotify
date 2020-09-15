@@ -192,13 +192,19 @@ def PleaseLogIn():
     # Will force arduino to shutdown all current processes(turn all lights red) -> follow same format as data format
     # Will turn Raspberry PI's LCD to error state prompt
 
+def SendUpdateToArduino(Info):
+    pass
+    # Pass serial output to arduino
+    # Will follow same format as the error info format
 
 if __name__ == "__main__":
-    pass
-
     # Run Api calls every 5 minutes
     # Data will be sent to the arduino and LCD in a standardized format -> for error and data purposes
     # Error "lights" is taken care by the arduino code -> still be able to accept data in case of gmail/calendar auth
 
     # Make sure all apis are working and LCDUpdate works
     # Make sure serial output for error function is working
+    while True:
+        # API calls being stored and converted for Arduino
+        SendUpdateToArduino(Info)
+        LCDUpdate()
