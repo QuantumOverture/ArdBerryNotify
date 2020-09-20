@@ -31,10 +31,9 @@ def GoogleAuth(type,version,SCOPES):
             try:
                 creds.refresh(Request())
             except:
-                UnexpectedFailure("Error in GoogleAuth")
+                UnexpectedFailure()
                 exit(1)
         else:
-            PleaseLogIn()
             input("Press any key to continue logging in to the Gmail/Google Calender!")
             flow = InstalledAppFlow.from_client_secrets_file(
                 'GoogleAuth.json', SCOPES)
@@ -132,7 +131,7 @@ def IsTheWeatherBad():
     try:
         req = requests.get('http://api.airvisual.com/v2/city?city=Woodland&state=California&country=USA&key='+KeyData)
     except:
-        UnexpectedFailure("Error in Swiss AQI API")
+        UnexpectedFailure()
         exit(1)
     ResponseData  = json.loads(req.text)
     AQIData = int(ResponseData["data"]["current"]["pollution"]["aqius"] > 100)
@@ -142,7 +141,7 @@ def IsTheWeatherBad():
     try:
         req = requests.get("https://enviro.epa.gov/enviro/efservice/getEnvirofactsUVHOURLY/ZIP/95776/json")
     except:
-        UnexpectedFailure("Error in UV API")
+        UnexpectedFailure()
         exit(1)
     ResponseData = json.loads(req.text)
 
@@ -156,43 +155,18 @@ def IsTheWeatherBad():
             break
 
     # Debug lines:
-    print(str(AQIData)+" | "+ str(TempData)+" | "+str(HumdData) +" | "+str(UVData))
+    # print(str(AQIData)+" | "+ str(TempData)+" | "+str(HumdData) +" | "+str(UVData))
     # print(str(ord(AQIData)-33) + " | " + str(ord(TempData)-33) + " | " + str(ord(HumdData)-33) + " | " + str(ord(UVData)-33))
 
     # Convert into weighted int
     return str(int(((AQIData*50) + (TempData*30) + (HumdData*5) + (UVData*30) + (WindData*20)) >= 50))
 
-def Forcast():
-    # https://www.weather.gov/documentation/services-web-api
-    header = {"User-Agent": "(ArdBerryNotify, ismaildee@gmail.com)"}
-    try:
-        req = requests.get('https://api.weather.gov/gridpoints/STO/31,73/forecast',headers=header)
-    except:
-        UnexpectedFailure("Error in Forecast API")
-        exit(1)
-    Result = json.loads(req.text)
-    Forecast = Result["properties"]["periods"][0]["detailedForecast"][0:93]
-    return [chr(len(Forecast) + 33), Forecast]
 
-def LCDUpdate():
-    time.sleep(30)
-    # Fix when on Raspberry PI 4
-    # LCDUpdate waits for 5 minutes afterwards tell people an update  is happening(set some counter) -> while doing
-    # that scroll output text at a good enough pace that it repeats a couple of times
 
-def UnexpectedFailure(ErrorDescription):
-    pass
-    # Pass serial output to arduino also pass in Error description in place of forcast data
-    # Will force arduino to shutdown all current processes(turn all lights red) -> follow same format as data format
-
-    # Will turn Raspberry PI's LCD to error state prompt
+def UnexpectedFailure():
+    SerialConnection.write("~".encode("utf-8"))
     exit(1)
 
-def PleaseLogIn():
-    pass
-    # Pass serial output to arduino
-    # Will force arduino to shutdown all current processes(turn all lights red) -> follow same format as data format
-    # Will turn Raspberry PI's LCD to error state prompt
 
 def SendUpdateToArduino():
     WeatherResult = IsTheWeatherBad()
@@ -214,8 +188,8 @@ if __name__ == "__main__":
 
     # Make sure all apis are working and LCDUpdate works
     # Make sure serial output for error function is working
+
     while True:
         # API calls being stored and converted for Arduino
         SendUpdateToArduino()
-        # Like delay but also does a NYSE style ticker display on the LCD connected to the Raspberry PI
-        LCDUpdate()
+        time.sleep(30000)
