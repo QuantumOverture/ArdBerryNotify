@@ -1,5 +1,8 @@
-// Forked from -> www.elegoo.com 's RGB LED tutorial
+// Resources used:
+// www.elegoo.com 's RGB LED tutorial
 // https://www.meccanismocomplesso.org/en/tutorial-sending-values-from-pc-to-arduino-by-serial-communication/
+// https://forum.arduino.cc/index.php?topic=585676.0
+
 
 // define pins
 #define BLUE_Weather 9
