@@ -129,7 +129,7 @@ def IsTheWeatherBad():
     with open('AQI.json', 'r') as RawJson:
         KeyData = json.load(RawJson)["key"]
     try:
-        req = requests.get('http://api.airvisual.com/v2/city?city=Woodland&state=California&country=USA&key='+KeyData)
+        req = requests.get('http://api.airvisual.com/v2/city?city= &state= &country= &key='+KeyData)
     except:
         UnexpectedFailure()
         exit(1)
