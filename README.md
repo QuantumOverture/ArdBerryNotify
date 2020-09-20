@@ -26,6 +26,6 @@ V2 Idea:
 ***
 Picture of the system working:
 <p align="center">
-  <img src="https://1.bp.blogspot.com/-pRQBuiS0dk4/X2fPoR5G10I/AAAAAAAAA1c/0TJbX9uUd08fBZLoVhLAI0mZewEtDi6LgCLcBGAsYHQ/s320/IMG-0071.JPG" />
+  <img src="https://1.bp.blogspot.com/-pRQBuiS0dk4/X2fPoR5G10I/AAAAAAAAA1c/0TJbX9uUd08fBZLoVhLAI0mZewEtDi6LgCLcBGAsYHQ/s2048/IMG-0071.JPG" />
 </p>
 
