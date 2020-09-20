@@ -19,6 +19,8 @@ Arduino:
     * Red light for classes.
 
 ***
+Read some of my dev posts about this project here: http://leadzincandcopper.blogspot.com/
+***
 V2 Idea:
 
 * Use Rapberry PI Zero w + Arduino or TI BreadBoard Booster -> Only focus on the environmental status but also make a physical housing for it and add things like apparent temperature calculations.
