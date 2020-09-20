@@ -35,28 +35,40 @@ int redValue;
 int greenValue;
 int blueValue;
 
-
+int Stage = 0;
 void RecieveData(char * arr){
   // Weather Percent Data
-  char ch = Serial.read();
-  arr[0] = ch;
+  char ch;
+  if(Stage == 0){
+    ch = Serial.read();
+    arr[0] = ch;
+    
+    Stage++;
+    return;
+  }else if(Stage == 1){
   // Email int data
   ch = Serial.read();
   arr[1] = ch;
-  // Class int data
-  ch = Serial.read();
-  arr[2] = ch;
+  Stage++;
+  return;
+  }else if(Stage == 2){
+    // Class int data
+    ch = Serial.read();
+    arr[2] = ch;
+    Stage++;
+    return;
+  }
   // Forecast data is sent to the Raspberry PI
 }
 
 void TurnOnLights(char * arr){
   // The Raspberry PI has run into a fatal error and wants you to die with it :)
-  if(arr[0] == 126 && arr[1] == 126 && arr[2] == 2){
+  if(arr[0] == 126 && arr[1] == 126 && arr[2] == 50){
     exit(0);
   }
 
   // Weather Percent
-  if(arr[0]== "1"){
+  if(arr[0]== 49){
     redValue = 255;
     greenValue = 0;
     blueValue = 0;
@@ -67,30 +79,34 @@ void TurnOnLights(char * arr){
   }
   analogWrite(RED_Weather, redValue);
   analogWrite(GREEN_Weather, greenValue);
-  analogWrite(BLUE_Weather, redValue);
+  analogWrite(BLUE_Weather, blueValue);
 
-  if(arr[1] == "0"){
+  if(arr[1] == 48){
     redValue = 0;
     greenValue = 255;
     blueValue = 0;
-  }else if(arr[0] == "1"){
+  }else if(arr[1] == 49){
     redValue = 100;
     greenValue = 100;
     blueValue = 0;
-  }else if(arr[1] == "2"){
+  }else if(arr[1] == 50){
     redValue = 100;
     greenValue = 0;
     blueValue = 100;
-  }else{
+  }else if(arr[1] == 51){
     redValue = 255;
     greenValue = 0;
     blueValue = 0;
+  }else{
+    redValue = 100;
+    greenValue = 100;
+    blueValue = 100;
   }
   analogWrite(RED_Email, redValue);
   analogWrite(GREEN_Email, greenValue);
-  analogWrite(BLUE_Email, redValue);
+  analogWrite(BLUE_Email, blueValue);
 
-  if(arr[2] == "1"){
+  if(arr[2] == 49){
     digitalWrite(RED_Class, HIGH);
   }else{
     digitalWrite(RED_Class, LOW);
@@ -126,6 +142,10 @@ void serialEvent()
    while(Serial.available()) 
    {
       RecieveData(DataArray);
-      TurnOnLights(DataArray);
+      if(Stage == 3){
+        TurnOnLights(DataArray);
+        Stage = 0;
+      }
+    
    }
 }
