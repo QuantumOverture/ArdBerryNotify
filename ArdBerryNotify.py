@@ -7,12 +7,13 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 import datetime
-import serial
 import re
 import time
 from textblob import TextBlob
 
-
+import serial
+SerialConnection = serial.Serial('COM3',9600)
+time.sleep(3)
 
 def GoogleAuth(type,version,SCOPES):
     creds = None
@@ -64,7 +65,7 @@ def Gmail():
     NLPHit = False
     ImportantKeywordOrSender = False
     if len(MessageResult) == 0:
-        return 0
+        return "0"
     for Email in MessageResult:
         EmailData = service.users().messages().get(userId='me', id=Email['id']).execute()
         EmailSnippet = EmailData['snippet']
@@ -80,10 +81,9 @@ def Gmail():
             EmailTextAnalysis = TextBlob((Subject + EmailSnippet).lower())
             EmailTextPol = EmailTextAnalysis.sentiment.polarity
             EmailTextOpi = EmailTextAnalysis.sentiment.subjectivity
-            print(EmailTextOpi)
             print(EmailTextPol)
-            if (EmailTextOpi < 0.25 or EmailTextOpi == 1) and (
-                    EmailTextPol > 0.8 or EmailTextPol < -0.5 or EmailTextPol == 0):
+            print(EmailTextOpi)
+            if (EmailTextOpi == 0) and (EmailTextPol > 0.8 or EmailTextPol < -0.8):
                 NLPHit = True
 
         # Sender and Keyword  check, only try if a hit hasn't been found
@@ -98,11 +98,13 @@ def Gmail():
 
 
     if ImportantKeywordOrSender and NLPHit:
-        return 3
+        return "3"
     elif ImportantKeywordOrSender:
-        return 1
+        return "1"
+    elif NLPHit:
+        return "2"
     else:
-        return 2
+        return "4"
 
 
 
@@ -119,9 +121,9 @@ def DoIHaveClass():
                                           orderBy='startTime').execute()
     events = events_result.get('items', [])
     if not events:
-        return 0
+        return "0"
     else:
-        return 1
+        return "1"
 
 def IsTheWeatherBad():
     # +33 for single char conversion
@@ -154,11 +156,11 @@ def IsTheWeatherBad():
             break
 
     # Debug lines:
-    # print(str(AQIData)+" | "+ str(TempData)+" | "+str(HumdData) +" | "+str(UVData))
+    print(str(AQIData)+" | "+ str(TempData)+" | "+str(HumdData) +" | "+str(UVData))
     # print(str(ord(AQIData)-33) + " | " + str(ord(TempData)-33) + " | " + str(ord(HumdData)-33) + " | " + str(ord(UVData)-33))
 
     # Convert into weighted int
-    return int(((AQIData*50) + (TempData*30) + (HumdData*5) + (UVData*30) + (WindData*20)) > 50)
+    return str(int(((AQIData*50) + (TempData*30) + (HumdData*5) + (UVData*30) + (WindData*20)) >= 50))
 
 def Forcast():
     # https://www.weather.gov/documentation/services-web-api
@@ -173,7 +175,7 @@ def Forcast():
     return [chr(len(Forecast) + 33), Forecast]
 
 def LCDUpdate():
-    pass
+    time.sleep(30)
     # Fix when on Raspberry PI 4
     # LCDUpdate waits for 5 minutes afterwards tell people an update  is happening(set some counter) -> while doing
     # that scroll output text at a good enough pace that it repeats a couple of times
@@ -192,8 +194,16 @@ def PleaseLogIn():
     # Will force arduino to shutdown all current processes(turn all lights red) -> follow same format as data format
     # Will turn Raspberry PI's LCD to error state prompt
 
-def SendUpdateToArduino(Info):
-    pass
+def SendUpdateToArduino():
+    WeatherResult = IsTheWeatherBad()
+    SerialConnection.write(WeatherResult.encode("utf-8"))
+    print(WeatherResult.encode("utf-8"))
+    GmailResult = Gmail()
+    SerialConnection.write(GmailResult.encode("utf-8"))
+    print(GmailResult.encode("utf-8"))
+    ClassResult = DoIHaveClass()
+    SerialConnection.write(ClassResult.encode("utf-8"))
+    print(ClassResult.encode("utf-8"))
     # Pass serial output to arduino
     # Will follow same format as the error info format
 
@@ -206,5 +216,6 @@ if __name__ == "__main__":
     # Make sure serial output for error function is working
     while True:
         # API calls being stored and converted for Arduino
-        SendUpdateToArduino(Info)
+        SendUpdateToArduino()
+        # Like delay but also does a NYSE style ticker display on the LCD connected to the Raspberry PI
         LCDUpdate()
