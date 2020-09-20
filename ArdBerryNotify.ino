@@ -1,8 +1,5 @@
-// Resources used:
-// www.elegoo.com 's RGB LED tutorial
+// Forked from -> www.elegoo.com 's RGB LED tutorial
 // https://www.meccanismocomplesso.org/en/tutorial-sending-values-from-pc-to-arduino-by-serial-communication/
-// https://forum.arduino.cc/index.php?topic=585676.0
-
 
 // define pins
 #define BLUE_Weather 9
@@ -39,36 +36,53 @@ int greenValue;
 int blueValue;
 
 int Stage = 0;
+
+void CheckForErrorFromPc(char c){
+    if(c == 126){
+
+    analogWrite(RED_Email, 0);
+    analogWrite(GREEN_Email, 0);
+    analogWrite(BLUE_Email, 0);
+    
+    analogWrite(RED_Weather, 0);
+    analogWrite(GREEN_Weather, 0);
+    analogWrite(BLUE_Weather, 0);
+
+    digitalWrite(RED_Class, LOW);
+    Serial.end();
+    exit(1);
+  }
+}
 void RecieveData(char * arr){
   // Weather Percent Data
   char ch;
   if(Stage == 0){
     ch = Serial.read();
+    CheckForErrorFromPc(ch);
     arr[0] = ch;
-    
     Stage++;
     return;
   }else if(Stage == 1){
   // Email int data
   ch = Serial.read();
+  CheckForErrorFromPc(ch);
   arr[1] = ch;
   Stage++;
   return;
   }else if(Stage == 2){
     // Class int data
     ch = Serial.read();
+    CheckForErrorFromPc(ch);
     arr[2] = ch;
     Stage++;
     return;
   }
-  // Forecast data is sent to the Raspberry PI
+
+    
 }
 
 void TurnOnLights(char * arr){
   // The Raspberry PI has run into a fatal error and wants you to die with it :)
-  if(arr[0] == 126 && arr[1] == 126 && arr[2] == 50){
-    exit(0);
-  }
 
   // Weather Percent
   if(arr[0]== 49){
@@ -111,7 +125,7 @@ void TurnOnLights(char * arr){
 
   if(arr[2] == 49){
     digitalWrite(RED_Class, HIGH);
-  }else{
+  }else if(arr[2] == 48){
     digitalWrite(RED_Class, LOW);
   }
   
